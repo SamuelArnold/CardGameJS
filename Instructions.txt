@@ -1,0 +1,4 @@
+Download Node.js 
+download Socket.io for node js
+	socket.io-client
+	require
