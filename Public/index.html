@@ -7,93 +7,68 @@
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/trianglify/0.2.1/trianglify.min.js"></script>
     <script src="/JS/trianglifyBackground.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
 
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <script src="/JS/trianglifyBackground.js"> </script>
+    <style type="text/css">
+        p {
+            background-color: #cc0000;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
 
-    <script>
-        var $messageForm = $('#messageForm');
-        var $message = $('#message');
-        var $chat = $('#chat');
-        var changeColor = false;
-        var username = "Ancient"; 
-        /*          
+        .sent {
+            background-color: #cccccc;
+            border: none;
+            color: black;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
 
-		  var socket = io.connect('127.0.0.1', {
-			  'port': 8080,
-			  'transports': ['websockets']
-			});
-        */
-        document.addEventListener("DOMContentLoaded", function(){
-            			 console.log("Dom Loaded");
-        console.log('1');
-
-        // Connect to server
-        //var io = require('socket.io-client')
-        var socket = io();
-        //var socket = io.connect('127.0.0.1:8080', {reconnect: true});
-        var socket = io.connect('127.0.0.1:8080', {
-            reconnect: true
-        });
-        console.log('2');
-
-        // <!--send  -->
-        $messageForm.submit(function (e) {
-            e.preventDefault();
-
-            //added so no blank messages are sent
-            if ($message.val() == '') {
-                return;
-            }
-
-            socket.emit('send message',  username + ': ' + $message.val()  );
-            $message.val('');
-            changeColor = true;
-            console.log("Form Submitted ");
-        });
-
-        // <!--recieve --> 
-        socket.on('new message', function (data) {
-            if (changeColor) {
-                $chat.append('<div class= "sent">' + data.msg + '</div>');
-                $chat.scrollTop($chat.prop("scrollHeight"));
-            } else {
-                $chat.append('<div class= "well">' + data.msg + '</div>');
-            }
-
-            changeColor = false;
-            console.log("New Message ");
-        });
-        // recieve online members
-        socket.on('numOnline', function (data) {
-            document.getElementById('num_of_users').innerHTML = 'Current Number Of Users: ' + data.msg;
-
-            console.log(" # of onloine users" + data.msg);
-        });
-
-        socket.on('disconnect', function () {
-            // Do stuff (probably some jQuery)
-            window.location.reload();
-        });
-
-        socket.emit('createGame', {
-            Hero: "Sam"
-        });
-
-        console.log('3');
-    });
-    </script>
+        .recieved {
+            background-color: #444444;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+    </style>
 </head>
+
 
 <body>
     <div class="trianglified" id="trianglify-rouge">
         <p>Home Page! </p>
+        <br>
+        <p>Pick a User name </p> <br><textarea id="userNameForm"></textarea>
+        <br><br>
+        <button id="joinGameButton"> Join Game</button>
+
+        <canvas id="demoCanvas" width="500" height="200"></canvas>
+        <canvas id="demoCanvas" width="600" height="600"></canvas>
+        <!--- start Chat-->
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
                 </div>
                 <div class="col-md-8">
                     <div>
-                        <h3 id="name"> Global Chat </h3>
-                        <h4 id="num_of_users"></h4>
+                        <p id="name"> Global Chat </p>
+                        <p id="num_of_users"></p>
                         <ul class="list-group" id="user"></ul>
                     </div>
                     <div id="chat_container" class="col-md-8">
@@ -105,7 +80,6 @@
                         <textarea class="form-control" id="message"></textarea>
                         <div id="button_elements">
                             <button id="send_button" type="submit" class="btn btn-primary">Send</button>
-                            <button id="upload_btn" class="btn btn-primary">Send File</button>
                         </div>
                     </div>
                 </form>
@@ -113,49 +87,50 @@
         </div>
     </div>
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
 
-<link rel="stylesheet" type="text/css" href="/css/main.css">
-<script src="/JS/trianglifyBackground.js"> </script>
 <script>
+    /*This Script handles Canvas But right now is just moving Text*/
+    init();
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create });
-
-function preload() {
-
-    game.load.bitmapFont('gem', 'assets/fonts/bitmapFonts/gem.png', 'assets/fonts/bitmapFonts/gem.xml');
-
-}
-
-var bpmText;
-var text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quid ergo aliud intellegetur nisi uti ne quae pars naturae neglegatur? Si longus, levis; Ita relinquet duas, de quibus etiam atque etiam consideret. Optime, inquam. Sed quanta sit alias, nunc tantum possitne esse tanta.\n\nQuid, si etiam iucunda memoria est praeteritorum malorum? Consequatur summas voluptates non modo parvo, sed per me nihilo, si potest; Atque his de rebus et splendida est eorum et illustris oratio. Mihi enim satis est, ipsis non satis. Ergo ita: non posse honeste vivi, nisi honeste vivatur? Mihi quidem Antiochum, quem audis, satis belle videris attendere. Et quod est munus, quod opus sapientiae? Ex rebus enim timiditas, non ex vocabulis nascitur. Ex ea difficultate illae fallaciloquae, ut ait Accius, malitiae natae sunt. Nonne videmus quanta perturbatio rerum omnium consequatur, quanta confusio? Quae cum magnifice primo dici viderentur, considerata minus probabantur.\n\n---> Click to remove text";
-
-function create() {
-
-    game.stage.backgroundColor = 0x272822;
-
-    bmpText = game.add.bitmapText(32, 32, 'gem', text, 16);
-
-    bmpText.maxWidth = 400;
-
-    //  Click to remove text and purge glyphs
-    game.input.onDown.addOnce(chopText, this);
-
-}
-
-function chopText() {
-
-    bmpText.text = text.substr(0, 26);
-
-    var purged = bmpText.purgeGlyphs();
-
-    game.add.bitmapText(32, 128, 'gem', "Purged " + purged + " glyphs", 32);
-
-}
-
-
-
-
+    function init() {
+        var stage = new createjs.Stage("demoCanvas");
+        var txt = new createjs.Text();
+        txt.font = "bold 26px Dorsa";
+        txt.color = "#ffffff";
+        txt.text = "Join A Game!";
+        txt.x = 100;
+        txt.y = 100;
+        stage.addChild(txt);
+        createjs.Tween.get(txt, {
+                loop: true
+            })
+            .to({
+                x: 250
+            }, 1000, createjs.Ease.getPowInOut(4))
+            .to({
+                alpha: 0,
+                y: 75
+            }, 500, createjs.Ease.getPowInOut(2))
+            .to({
+                alpha: 0,
+                y: 125
+            }, 100)
+            .to({
+                alpha: 1,
+                y: 100
+            }, 500, createjs.Ease.getPowInOut(2))
+            .to({
+                x: 100
+            }, 800, createjs.Ease.getPowInOut(2));
+        createjs.Ticker.setFPS(60);
+        createjs.Ticker.addEventListener("tick", stage);
+    }
+</script>
+<script>
+    /*
+        This Script Handles the triangle background:) 
+    
+    */
     //--------------------- trianglify light blue  ------------------
     function addTriangle(id, couleurX, couleurY) {
         target = document.getElementById(id, couleurX, couleurY);
@@ -182,6 +157,83 @@ function chopText() {
     addTriangle('trianglify-rouge', ['#5f0308', '#851117', '#cf363f', '#e86d74'], ['#5f0308', '#851117', '#cf363f',
         '#e86d74'
     ]);
+</script>
+
+<script>
+    /*
+        This Script Handles all the Chat Server Stuff: 
+
+    */
+    var $messageForm = $('#messageForm');
+    var $message = $('#message');
+    var $chat = $('#chat');
+    var changeColor = false;
+    // Get userName
+    var username = "TestUser";
+    $('#userNameForm').change(function() {
+        if (!$("#userNameForm").val()) {
+             username = "TestUser";
+        } else {
+            username = $('#userNameForm').val();
+        }  username = $('#userNameForm').val();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("Dom Loaded");
+
+        // Connect to server
+        //var io = require('socket.io-client')
+        var socket = io();
+        //var socket = io.connect('127.0.0.1:8080', {reconnect: true});
+        var socket = io.connect('127.0.0.1:8080', {
+            reconnect: true
+        });
+        console.log('2');
+
+        // <!--send  a message-->
+        $messageForm.submit(function (e) {
+            e.preventDefault();
+            //added so no blank messages are sent
+            if ($message.val() == '') {
+                return;
+            }
+            socket.emit('send message', username + ': ' + $message.val());
+            $message.val('');
+            changeColor = true;
+            console.log("Form Submitted ");
+        });
+
+        // <!--recieve --> 
+        socket.on('new message', function (data) {
+            // Apppend recieved data to div added to page.
+            if (changeColor) {
+                $chat.append('<div class= "sent">' + data.msg + '</div>');
+                $chat.scrollTop($chat.prop("scrollHeight"));
+            } else {
+                $chat.append('<div class= "recieved">' + data.msg + '</div>');
+            }
+            changeColor = false;
+            console.log("New Message ");
+        });
+
+        // recieve online members
+        socket.on('numOnline', function (data) {
+            document.getElementById('num_of_users').innerHTML = 'Current Number Of Users: ' + data.msg;
+            console.log(" # of onloine users" + data.msg);
+        });
+
+        socket.on('disconnect', function () {
+            //When Screen goes idle restart page
+            // window.location.reload();
+        });
+
+        // handle Sending object
+        // socket.emit('createGame', {
+        //    Hero: "Sam"
+        //});
+
+        console.log('3');
+    });
 </script>
 
 </html>
